@@ -68,7 +68,7 @@
     "chai": "^4.0.0",
     "eslint-if-supported": "^1.0.1",
     "feathers": "^2.0.0",
-    "feathers-hooks": "^2.0.1",
+    "feathers-hooks": "2.0.1",
     "feathers-rest": "^1.2.4",
     "feathers-service-tests": "^0.10.0",
     "feathers-socketio": "^2.0.0",
