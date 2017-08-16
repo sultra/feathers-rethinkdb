@@ -99,8 +99,14 @@ class Service {
     let q = params.rethinkdb || this.createQuery(params.query);
     let countQuery;
 
+      // mxj: 允许执行自定义 real 语句
+    if (params.reql && typeof params.reql === 'function') {
+      q = params.reql(q, this.options.r);
+    }
+
     // For pagination, count has to run as a separate query, but without limit.
-    if (paginate.default) {
+    // mxj: 添加 showCount 属性控制是否显示 count
+    if (paginate.showCount && paginate.default) {
       countQuery = q.count().run();
     }
 
