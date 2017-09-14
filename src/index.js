@@ -99,8 +99,14 @@ class Service {
     let q = params.rethinkdb || this.createQuery(params.query);
     let countQuery;
 
+      // mxj: 允许执行自定义 real 语句
+    if (params.reql && typeof params.reql === 'function') {
+      q = params.reql(q, this.options.r);
+    }
+
     // For pagination, count has to run as a separate query, but without limit.
-    if (paginate.default) {
+    // mxj: 添加 showCount 属性控制是否显示 count
+    if (paginate.showCount && paginate.default) {
       countQuery = q.count().run();
     }
 
@@ -187,32 +193,75 @@ class Service {
     }).then(select(params, this.id));
   }
 
-  patch (id, data, params = {}) {
+  patch(id, data, params = {}) {
     let query;
 
     if (id !== null && id !== undefined) {
-      query = this._get(id);
+        query = this._get(id);
     } else if (params) {
-      query = this._find(params);
+        query = this._find(params);
     } else {
-      return Promise.reject(new Error('Patch requires an ID or params'));
+        return Promise.reject(new Error('Patch requires an ID or params'));
     }
 
     // Find the original record(s), first, then patch them.
     return query.then(getData => {
-      let query;
-      let options = Object.assign({ returnChanges: true }, params.rethinkdb);
+        let query;
+        let options = Object.assign({
+            returnChanges: true
+        }, params.rethinkdb);
 
-      if (Array.isArray(getData)) {
-        query = this.table.getAll(...getData.map(item => item[this.id]));
-      } else {
-        query = this.table.get(id);
-      }
-
-      return query.update(data, options).run().then(response => {
-        let changes = response.changes.map(change => change.new_val);
-        return changes.length === 1 ? changes[0] : changes;
-      });
+        if (Array.isArray(getData)) {
+            query = this.table.getAll(...getData.map(item => item[this.id]));
+        } else {
+            query = this.table.get(id);
+        }
+        //zly,
+        //params读取一个传入的方法，实际的更新data由该方法返回
+        let getTransData = params.getTransData;
+        let reqlUpdate = params.reqlUpdate;
+        if (getTransData && typeof getTransData === 'function') {
+            return query.then(result => {
+                data = getTransData(result);
+                return query.update(data, options).run().then(response => {
+                    return handleReturns(response, options.returnChanges);
+                });
+            })
+        } else if (reqlUpdate && typeof reqlUpdate === 'function') {
+            return query.update(row => {
+                return reqlUpdate(row);
+            }, options).run().then(response => {
+              return handleReturns(response, options.returnChanges);
+            });
+        } else {
+            return query.update(data, options).run().then(response => {
+                return handleReturns(response, options.returnChanges);
+            });
+        }
+        /**
+         * 处理当returnChanges=false时返回会报错问题
+         * @param {*} response 数据库返回的结果值
+         * @param {boolean} isNeetReturnChanges 
+         */
+        function handleReturns(response, isNeetReturnChanges) {
+            let changes;
+            if (isNeetReturnChanges) {
+                changes = response.changes.map(change => change.new_val);
+                return changes.length === 1 ? changes[0] : changes;
+            } else {
+                changes = response.replaced;
+                return changes
+            }
+        }
+        //just test reql
+        // return query.update(row=>{
+        //   return  row('state')(0)('name').eq('已处理').branch({},
+        //       row.merge({state: row('state').insertAt(0,{name:data.state,time:data.stateTime ? new Date(data.stateTime) : new Date()})})
+        //     )
+        //   },options).run().then(response => {
+        //       let changes = response.changes.map(change => change.new_val);
+        //       return changes.length === 1 ? changes[0] : changes;
+        //     });
     }).then(select(params, this.id));
   }
 
