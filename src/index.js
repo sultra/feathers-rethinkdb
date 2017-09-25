@@ -105,8 +105,7 @@ class Service {
     }
 
     // For pagination, count has to run as a separate query, but without limit.
-    // mxj: 添加 showCount 属性控制是否显示 count
-    if (paginate.showCount && paginate.default) {
+    if (paginate.default) {
       countQuery = q.count().run();
     }
 
