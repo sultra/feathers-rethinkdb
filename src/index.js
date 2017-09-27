@@ -66,26 +66,29 @@ class Service {
     return createFilter(query, this.options.r);
   }
 
-  createQuery (originalQuery) {
+  createQuery(originalQuery) {
     const { filters, query } = filter(originalQuery || {});
 
     let r = this.options.r;
-    let rq = this.table.filter(this.createFilter(query));
-
-    // Handle $select
-    if (filters.$select) {
-      rq = rq.pluck(filters.$select);
-    }
+    let rq = this.table
 
     // Handle $sort
     if (filters.$sort) {
       _.each(filters.$sort, (order, fieldName) => {
+        let hasIndex = this.options.index.indexOf(fieldName) >= 0;
         if (parseInt(order) === 1) {
-          rq = rq.orderBy(fieldName);
+          rq = rq.orderBy(hasIndex ? {index: fieldName} : fieldName);
         } else {
-          rq = rq.orderBy(r.desc(fieldName));
+          rq = rq.orderBy(hasIndex ? { index: r.desc(fieldName) } : r.desc(fieldName));
         }
       });
+    }
+       
+    rq = rq.filter(this.createFilter(query));
+
+    // Handle $select
+    if (filters.$select) {
+      rq = rq.pluck(filters.$select);
     }
 
     return rq;
