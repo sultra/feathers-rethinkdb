@@ -219,7 +219,7 @@ class Service {
             query = this.table.get(id);
         }
         //zly,
-        //params读取一个传入的方法，实际的更新data由该方法返回
+        //params读取一个传入的方法，实际的更新data由该方法处理
         let getTransData = params.getTransData;
         let reqlUpdate = params.reqlUpdate;
         if (getTransData && typeof getTransData === 'function') {
@@ -243,11 +243,11 @@ class Service {
         /**
          * 处理当returnChanges=false时返回会报错问题
          * @param {*} response 数据库返回的结果值
-         * @param {boolean} isNeetReturnChanges 
+         * @param {boolean} isNeedReturnChanges 
          */
-        function handleReturns(response, isNeetReturnChanges) {
+        function handleReturns(response, isNeedReturnChanges) {
             let changes;
-            if (isNeetReturnChanges) {
+            if (isNeedReturnChanges) {
                 changes = response.changes.map(change => change.new_val);
                 return changes.length === 1 ? changes[0] : changes;
             } else {
@@ -255,15 +255,6 @@ class Service {
                 return changes
             }
         }
-        //just test reql
-        // return query.update(row=>{
-        //   return  row('state')(0)('name').eq('已处理').branch({},
-        //       row.merge({state: row('state').insertAt(0,{name:data.state,time:data.stateTime ? new Date(data.stateTime) : new Date()})})
-        //     )
-        //   },options).run().then(response => {
-        //       let changes = response.changes.map(change => change.new_val);
-        //       return changes.length === 1 ? changes[0] : changes;
-        //     });
     }).then(select(params, this.id));
   }
 
