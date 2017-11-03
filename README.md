@@ -1,3 +1,5 @@
+> 为正在开发的项目加上一些功能 @JKR3_TEAM
+
 feathers-rethinkdb
 ==================
 
