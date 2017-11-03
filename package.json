@@ -1,5 +1,5 @@
 {
-  "name": "feathers-rethinkdb-R3",
+  "name": "feathers-rethinkdb-r3",
   "description": "A RethinkDB Service for FeathersJS",
   "version": "0.4.3-3",
   "homepage": "https://github.com/feathersjs/feathers-rethinkdb",

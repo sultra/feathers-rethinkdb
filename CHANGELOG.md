@@ -1,5 +1,8 @@
 # Change Log
 
+## [v0.4.3-3](https://github.com/sultra/feathers-rethinkdb/tree/v0.4.3-3) (2017-11-03)
+
+
 ## [v0.4.3](https://github.com/feathersjs/feathers-rethinkdb/tree/v0.4.3) (2017-05-30)
 [Full Changelog](https://github.com/feathersjs/feathers-rethinkdb/compare/v0.4.2...v0.4.3)
 
