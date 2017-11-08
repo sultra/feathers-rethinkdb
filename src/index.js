@@ -75,7 +75,7 @@ class Service {
     // Handle $sort
     if (filters.$sort) {
       _.each(filters.$sort, (order, fieldName) => {
-        let hasIndex = this.options.index.indexOf(fieldName) >= 0;
+        let hasIndex = this.options.hasOwnProperty('index') ? this.options.index.indexOf(fieldName) >= 0 : false;
         if (parseInt(order) === 1) {
           rq = rq.orderBy(hasIndex ? {index: fieldName} : fieldName);
         } else {
