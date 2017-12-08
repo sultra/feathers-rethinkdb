@@ -40,6 +40,17 @@ class Service {
     this.watch = options.watch !== undefined ? options.watch : true;
     this.paginate = options.paginate || {};
     this.events = this.watch ? BASE_EVENTS.concat(options.events) : options.events || [];
+    this.changefeedsOptions = {
+      squash:false,
+      includeInitial:false,
+      includeStates:false,
+      includeOffsets:false,
+      includeTypes:false
+    }
+    if (options.changefeedsOptions) {
+      this.changefeedsOptions = Object.assign(options.changefeedsOptions, this.changefeedsOptions);
+    }
+
   }
 
   extend (obj) {
@@ -342,31 +353,34 @@ class Service {
       };
     }
 
-    this._cursor = this.table.changes().run().then(cursor => {
-      cursor.each((error, data) => {
-        if (error || typeof this.emit !== 'function') {
-          return;
-        }
-        // For each case, run through processHooks first,
-        // then emit the event
-        if (data.old_val === null) {
-          runHooks('create', data.new_val)
-            .then(hook => this.emit('created', hook.result));
-        } else if (data.new_val === null) {
-          runHooks('remove', data.old_val)
-            .then(hook => this.emit('removed', hook.result));
-        } else {
-          runHooks('patch', data.new_val).then(hook => {
-            this.emit('updated', hook.result);
-            this.emit('patched', hook.result);
-          });
-        }
-      });
-
-      return cursor;
+    this._cursor = this.table.changes(this.changefeedsOptions).run().then(cursor => {
+      return this._handleCursor(cursor,runHooks);
     });
-
     return this._cursor;
+  }
+
+  _handleCursor(cursor,runHooks){
+    cursor.each((error, data) => {
+      if (error || typeof this.emit !== 'function') {
+        return;
+      }
+      // For each case, run through processHooks first,
+      // then emit the event
+      if (data.old_val === null) {
+        runHooks('create', data.new_val)
+          .then(hook => this.emit('created', hook.result));
+      } else if (data.new_val === null) {
+        runHooks('remove', data.old_val)
+          .then(hook => this.emit('removed', hook.result));
+      } else {
+        runHooks('patch', data.new_val).then(hook => {
+          this.emit('updated', hook.result);
+          // 没有必要发送两个，不管update还是patch都认为是update
+          // this.emit('patched', hook.result);
+        });
+      }
+    });
+    return cursor;
   }
 
   setup (app) {
