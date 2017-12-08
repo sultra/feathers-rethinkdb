@@ -58,7 +58,16 @@ cosnt options={index:['index1','index2']}
    })
    ```
 
-
+3. watch 方法中增加对 changes()方法中传入参数的支持
+``` js
+  table.changes({
+    squash:false,
+    includeInitial:false,
+    includeStates:false,
+    includeOffsets:false,
+    includeTypes:false
+  })
+```
 
 License
 -------
